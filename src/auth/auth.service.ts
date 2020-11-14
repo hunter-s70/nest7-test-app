@@ -12,49 +12,127 @@ export class AuthService {
   ) {}
 
   async signUp(userDto: UserDto): Promise<User> {
-    const user = await this.userService.createUser(userDto);
-    return await this.signIn(user);
+    await this.userService.createUser(userDto);
+    return await this.signIn(userDto);
   }
 
-  async signIn(user: User): Promise<User> {
-    const payload = { username: user.username, id: user.id };
+  async signIn(userDto: UserDto): Promise<User> {
+    const {email, password} = userDto;
+    const user = await this.userService.findUser({email, password});
+    const payload = { email: user.email, id: user.id };
     user.token = this.jwtService.sign(payload);
     return await this.userService.updateUser(user);
   }
 
-  // async signOut(user: User): Promise<User> {
-  //   user.token = null;
-  //   return user;
-  // }
+  async signOut(token: string): Promise<User> {
+    const tokenData: any = this.jwtService.decode(token);
+    const {id, email} = tokenData;
+    const user = await this.userService.findUser({id, email});
+    user.token = null;
+    return await this.userService.updateUser(user);
+  }
 
-  async validateUser(userDto: UserDto): Promise<string[] | null> {
+  async validateSignUpFields(userDto: UserDto): Promise<string[] | null> {
     const errors = [];
     const {username, email, password} = userDto;
-    const user = await this.userService.findUser(email);
+    const emailError = this.checkEmail(email);
+    const passwordError = this.checkPassword(password);
+    const usernameError = this.checkUsername(username);
+    const userError = await this.checkUserExistence(userDto);
 
-    if (!email) {
-      errors.push('email is required')
-    } if (!this.validateEmail(email)) {
-      errors.push('email is not valid')
-    } else if (email.length > 40) {
-      errors.push('max email is 40 characters')
-    } else if (user) {
-      errors.push('email has already in use')
+    if (emailError) {
+      errors.push(emailError);
     }
-
-    if (!username) {
-      errors.push('username is required')
-    } else if (username.length > 16) {
-      errors.push('max username is 16 characters')
+    if (passwordError) {
+      errors.push(passwordError);
     }
-
-    if (!password) {
-      errors.push('password is required')
-    } else if (password.length > 30) {
-      errors.push('max password is 30 characters')
+    if (usernameError) {
+      errors.push(usernameError);
+    }
+    if (userError) {
+      errors.push(userError);
     }
 
     return errors.length ? errors: null;
+  }
+
+  async validateSignInFields(userDto: UserDto): Promise<string[] | null> {
+    const errors = [];
+    const {email, password} = userDto;
+    const emailError = this.checkEmail(email);
+    const passwordError = this.checkPassword(password);
+    const userError = await this.checkUser(userDto);
+
+    if (emailError) {
+      errors.push(emailError);
+    }
+    if (passwordError) {
+      errors.push(passwordError);
+    }
+    if (userError && !errors.length) {
+      errors.push(userError);
+    }
+
+    return errors.length ? errors: null;
+  }
+
+  async validateSignOutFields(token: string): Promise<string[] | null> {
+    const errors = [];
+    const tokenData: any = this.jwtService.decode(token);
+    const {id, email} = tokenData;
+
+    if (tokenData) {
+      const user = await this.userService.findUser({id, email});
+      if (!user) {
+        errors.push('usr does not exist');
+      }
+    }
+
+    return errors.length ? errors: null;
+  }
+
+  async checkUserExistence(userDto: UserDto): Promise<string> {
+    const {email, password} = userDto;
+    const user = await this.userService.findUser({email, password});
+
+    if (user) {
+      return 'email is registered';
+    }
+  }
+
+  async checkUser(userDto: UserDto): Promise<string> {
+    const {email, password} = userDto;
+    const user = await this.userService.findUser({email, password});
+
+    if (!user || user.password !== password) {
+      return 'invalid email or password';
+    }
+  }
+
+  checkUsername(username: string): string {
+    if (!username) {
+      return 'username is required';
+    } else if (username.length > 40) {
+      return 'max username is 16 characters';
+    }
+  }
+
+  checkPassword(password: string): string {
+    if (!password) {
+      return 'password is required';
+    } else if (password.length > 30) {
+      return 'max password is 30 characters';
+    }
+  }
+
+  checkEmail(email: string): string {
+    if (!email) {
+      return 'email is required';
+    } else if (!this.validateEmail(email)) {
+      return 'email is not valid';
+    } else if (email.length > 40) {
+      return 'max email is 40 characters';
+    }
   }
 
   validateEmail(email) {

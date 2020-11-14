@@ -1,5 +1,11 @@
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
-// import { User } from '../users/user.entity';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+  Headers
+} from '@nestjs/common';
 import { UserDto } from '../users/user.dto';
 import { AuthService } from './auth.service';
 
@@ -11,7 +17,7 @@ export class AuthController {
 
   @Post('sign-up')
   async signUp(@Body() userDto: UserDto): Promise<{token: string}> {
-    const errors = await this.authService.validateUser(userDto);
+    const errors = await this.authService.validateSignUpFields(userDto);
 
     if (errors) {
       throw new HttpException({
@@ -26,14 +32,36 @@ export class AuthController {
   }
 
   @Post('sign-in')
-  async signIn(): Promise<any> {
-    // ToDo: add login user
-    return '';
+  async signIn(@Body() userDto: UserDto): Promise<{token: string}> {
+    const errors = await this.authService.validateSignInFields(userDto);
+
+    if (errors) {
+      throw new HttpException({
+        status: HttpStatus.FORBIDDEN,
+        errors,
+      }, HttpStatus.FORBIDDEN);
+    }
+    const user = await this.authService.signIn(userDto);
+    return {
+      token: user.token
+    };
   }
 
   @Post('sign-out')
-  async signOut(): Promise<any> {
-    // ToDo: add user detection
-    return '';
+  async signOut(@Headers('authorization') authorization): Promise<any> {
+    if (authorization) {
+      const [, token] = authorization.split(' ');
+      const errors = await this.authService.validateSignOutFields(token);
+
+      if (errors) {
+        throw new HttpException({
+          status: HttpStatus.FORBIDDEN,
+          errors,
+        }, HttpStatus.FORBIDDEN);
+      }
+      await this.authService.signOut(token);
+      return {};
+    }
+    throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
   }
 }
