@@ -27,7 +27,7 @@ export class UserService {
     return await this.usersRepository.save(user);
   }
 
-  async findUser(email: string): Promise<User> {
-    return await this.usersRepository.findOne({email});
+  async findUser(searchParams): Promise<User> {
+    return await this.usersRepository.findOne(searchParams);
   }
 }
