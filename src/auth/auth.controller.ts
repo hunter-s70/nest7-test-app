@@ -1,5 +1,6 @@
 import {
   Controller,
+  UseGuards,
   Post,
   Body,
   HttpException,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { UserDto } from '../users/user.dto';
 import { AuthService } from './auth.service';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -48,20 +50,18 @@ export class AuthController {
   }
 
   @Post('sign-out')
+  @UseGuards(AuthGuard)
   async signOut(@Headers('authorization') authorization): Promise<any> {
-    if (authorization) {
-      const [, token] = authorization.split(' ');
-      const errors = await this.authService.validateSignOutFields(token);
+    const [, token] = authorization.split(' ');
+    const errors = await this.authService.validateSignOutFields(token);
 
-      if (errors) {
-        throw new HttpException({
-          status: HttpStatus.FORBIDDEN,
-          errors,
-        }, HttpStatus.FORBIDDEN);
-      }
-      await this.authService.signOut(token);
-      return {};
+    if (errors) {
+      throw new HttpException({
+        status: HttpStatus.FORBIDDEN,
+        errors,
+      }, HttpStatus.FORBIDDEN);
     }
-    throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    await this.authService.signOut(token);
+    return {};
   }
 }
