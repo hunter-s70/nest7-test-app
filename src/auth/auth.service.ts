@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../users/user.service';
 import { UserDto } from '../users/user.dto';
@@ -30,6 +30,18 @@ export class AuthService {
     const user = await this.userService.findUser({id, email});
     user.token = null;
     return await this.userService.updateUser(user);
+  }
+
+  validateToken(token: string): boolean {
+    try {
+      this.jwtService.verify(token);
+      return true;
+    } catch (err) {
+      throw new HttpException({
+        status: HttpStatus.FORBIDDEN,
+        errors: [err.message],
+      }, HttpStatus.FORBIDDEN);
+    }
   }
 
   async validateSignUpFields(userDto: UserDto): Promise<string[] | null> {
