@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import { UserService } from '../users/user.service';
 import { UserDto } from '../users/user.dto';
 import { User } from '../users/user.entity';
@@ -17,8 +18,8 @@ export class AuthService {
   }
 
   async signIn(userDto: UserDto): Promise<User> {
-    const {email, password} = userDto;
-    const user = await this.userService.findUser({email, password});
+    const {email} = userDto;
+    const user: User = await this.userService.findUser({email});
     const payload = { email: user.email, id: user.id };
     user.token = this.jwtService.sign(payload);
     return await this.userService.updateUser(user);
@@ -27,7 +28,7 @@ export class AuthService {
   async signOut(token: string): Promise<User> {
     const tokenData: any = this.jwtService.decode(token);
     const {id, email} = tokenData;
-    const user = await this.userService.findUser({id, email});
+    const user: User = await this.userService.findUser({id, email});
     user.token = null;
     return await this.userService.updateUser(user);
   }
@@ -47,10 +48,10 @@ export class AuthService {
   async validateSignUpFields(userDto: UserDto): Promise<string[] | null> {
     const errors = [];
     const {username, email, password} = userDto;
-    const emailError = this.checkEmail(email);
-    const passwordError = this.checkPassword(password);
-    const usernameError = this.checkUsername(username);
-    const userError = await this.checkUserExistence(userDto);
+    const emailError: string = this.checkEmail(email);
+    const passwordError: string = this.checkPassword(password);
+    const usernameError: string = this.checkUsername(username);
+    const userError: string = await this.checkUserExistence(userDto);
 
     if (emailError) {
       errors.push(emailError);
@@ -71,9 +72,9 @@ export class AuthService {
   async validateSignInFields(userDto: UserDto): Promise<string[] | null> {
     const errors = [];
     const {email, password} = userDto;
-    const emailError = this.checkEmail(email);
-    const passwordError = this.checkPassword(password);
-    const userError = await this.checkUser(userDto);
+    const emailError: string = this.checkEmail(email);
+    const passwordError: string = this.checkPassword(password);
+    const userError: string = await this.checkUser(userDto);
 
     if (emailError) {
       errors.push(emailError);
@@ -94,7 +95,7 @@ export class AuthService {
     const {id, email} = tokenData;
 
     if (tokenData) {
-      const user = await this.userService.findUser({id, email});
+      const user: User = await this.userService.findUser({id, email});
       if (!user) {
         errors.push('usr does not exist');
       }
@@ -104,8 +105,8 @@ export class AuthService {
   }
 
   async checkUserExistence(userDto: UserDto): Promise<string> {
-    const {email, password} = userDto;
-    const user = await this.userService.findUser({email, password});
+    const {email} = userDto;
+    const user: User = await this.userService.findUser({email});
 
     if (user) {
       return 'email is registered';
@@ -114,9 +115,10 @@ export class AuthService {
 
   async checkUser(userDto: UserDto): Promise<string> {
     const {email, password} = userDto;
-    const user = await this.userService.findUser({email, password});
+    const user: User = await this.userService.findUser({email});
+    const isUserPass: boolean = await bcrypt.compare(password, user.password);
 
-    if (!user || user.password !== password) {
+    if (!user || !isUserPass) {
       return 'invalid email or password';
     }
   }
@@ -147,7 +149,7 @@ export class AuthService {
     }
   }
 
-  validateEmail(email) {
+  validateEmail(email: string): boolean {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
   }
