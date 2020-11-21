@@ -19,7 +19,7 @@ export class AuthController {
 
   @Post('sign-up')
   async signUp(@Body() userDto: UserDto): Promise<{token: string}> {
-    const errors = await this.authService.validateSignUpFields(userDto);
+    const errors = await this.authService.checkUserExistence(userDto.email);
 
     if (errors) {
       throw new HttpException({
@@ -35,7 +35,8 @@ export class AuthController {
 
   @Post('sign-in')
   async signIn(@Body() userDto: UserDto): Promise<{token: string}> {
-    const errors = await this.authService.validateSignInFields(userDto);
+    const {email, password} = userDto;
+    const errors = await this.authService.checkUserIdentity(email, password);
 
     if (errors) {
       throw new HttpException({
@@ -43,7 +44,7 @@ export class AuthController {
         errors,
       }, HttpStatus.FORBIDDEN);
     }
-    const user = await this.authService.signIn(userDto.email);
+    const user = await this.authService.signIn(email);
     return {
       token: user.token
     };
@@ -53,7 +54,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async signOut(@Headers('authorization') authorization): Promise<any> {
     const [, token] = authorization.split(' ');
-    const errors = await this.authService.validateSignOutFields(token);
+    const errors = await this.authService.checkUserToken(token);
 
     if (errors) {
       throw new HttpException({
