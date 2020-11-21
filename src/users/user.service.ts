@@ -13,7 +13,7 @@ export class UserService {
   ) {}
 
   async findAll(): Promise<User[]> {
-    return await this.usersRepository.find();
+    return this.usersRepository.find();
   }
 
   async createUser(userData: UserDto): Promise<User> {
@@ -22,14 +22,14 @@ export class UserService {
     user.username = userData.username;
     user.email = userData.email;
     user.password = encryptedPass;
-    return await this.usersRepository.save(user);
+    return this.usersRepository.save(user);
   }
 
   async updateUser(user: User): Promise<User> {
-    return await this.usersRepository.save(user);
+    return this.usersRepository.save(user);
   }
 
   async findUser(searchParams): Promise<User> {
-    return await this.usersRepository.findOne(searchParams);
+    return this.usersRepository.findOne(searchParams);
   }
 }
