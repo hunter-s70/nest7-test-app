@@ -14,11 +14,10 @@ export class AuthService {
 
   async signUp(userDto: UserDto): Promise<User> {
     await this.userService.createUser(userDto);
-    return await this.signIn(userDto);
+    return await this.signIn(userDto.email);
   }
 
-  async signIn(userDto: UserDto): Promise<User> {
-    const {email} = userDto;
+  async signIn(email: string): Promise<User> {
     const user = await this.userService.findUser({email});
     const payload = { email: user.email, id: user.id };
     user.token = this.jwtService.sign(payload);
@@ -51,7 +50,7 @@ export class AuthService {
     const emailError = this.checkEmail(email);
     const passwordError = this.checkPassword(password);
     const usernameError = this.checkUsername(username);
-    const userError = await this.checkUserExistence(userDto);
+    const userError = await this.checkUserExistence(userDto.email);
 
     if (emailError) {
       errors.push(emailError);
@@ -104,8 +103,7 @@ export class AuthService {
     return errors.length ? errors: null;
   }
 
-  async checkUserExistence(userDto: UserDto): Promise<string> {
-    const {email} = userDto;
+  async checkUserExistence(email: string): Promise<string> {
     const user = await this.userService.findUser({email});
 
     if (user) {
