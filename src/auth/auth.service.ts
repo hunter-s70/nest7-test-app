@@ -14,14 +14,14 @@ export class AuthService {
 
   async signUp(userDto: UserDto): Promise<User> {
     await this.userService.createUser(userDto);
-    return await this.signIn(userDto.email);
+    return this.signIn(userDto.email);
   }
 
   async signIn(email: string): Promise<User> {
     const user = await this.userService.findUser({email});
     const payload = { email: user.email, id: user.id };
     user.token = this.jwtService.sign(payload);
-    return await this.userService.updateUser(user);
+    return this.userService.updateUser(user);
   }
 
   async signOut(token: string): Promise<User> {
@@ -29,7 +29,7 @@ export class AuthService {
     const {id, email} = tokenData;
     const user = await this.userService.findUser({id, email});
     user.token = null;
-    return await this.userService.updateUser(user);
+    return this.userService.updateUser(user);
   }
 
   validateToken(token: string): boolean {
