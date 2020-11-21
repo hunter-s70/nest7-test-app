@@ -19,7 +19,7 @@ export class AuthService {
 
   async signIn(userDto: UserDto): Promise<User> {
     const {email} = userDto;
-    const user: User = await this.userService.findUser({email});
+    const user = await this.userService.findUser({email});
     const payload = { email: user.email, id: user.id };
     user.token = this.jwtService.sign(payload);
     return await this.userService.updateUser(user);
@@ -28,7 +28,7 @@ export class AuthService {
   async signOut(token: string): Promise<User> {
     const tokenData: any = this.jwtService.decode(token);
     const {id, email} = tokenData;
-    const user: User = await this.userService.findUser({id, email});
+    const user = await this.userService.findUser({id, email});
     user.token = null;
     return await this.userService.updateUser(user);
   }
@@ -48,10 +48,10 @@ export class AuthService {
   async validateSignUpFields(userDto: UserDto): Promise<string[] | null> {
     const errors = [];
     const {username, email, password} = userDto;
-    const emailError: string = this.checkEmail(email);
-    const passwordError: string = this.checkPassword(password);
-    const usernameError: string = this.checkUsername(username);
-    const userError: string = await this.checkUserExistence(userDto);
+    const emailError = this.checkEmail(email);
+    const passwordError = this.checkPassword(password);
+    const usernameError = this.checkUsername(username);
+    const userError = await this.checkUserExistence(userDto);
 
     if (emailError) {
       errors.push(emailError);
@@ -72,9 +72,9 @@ export class AuthService {
   async validateSignInFields(userDto: UserDto): Promise<string[] | null> {
     const errors = [];
     const {email, password} = userDto;
-    const emailError: string = this.checkEmail(email);
-    const passwordError: string = this.checkPassword(password);
-    const userError: string = await this.checkUser(userDto);
+    const emailError = this.checkEmail(email);
+    const passwordError = this.checkPassword(password);
+    const userError = await this.checkUser(userDto);
 
     if (emailError) {
       errors.push(emailError);
@@ -95,7 +95,7 @@ export class AuthService {
     const {id, email} = tokenData;
 
     if (tokenData) {
-      const user: User = await this.userService.findUser({id, email});
+      const user = await this.userService.findUser({id, email});
       if (!user) {
         errors.push('usr does not exist');
       }
@@ -106,7 +106,7 @@ export class AuthService {
 
   async checkUserExistence(userDto: UserDto): Promise<string> {
     const {email} = userDto;
-    const user: User = await this.userService.findUser({email});
+    const user = await this.userService.findUser({email});
 
     if (user) {
       return 'email is registered';
@@ -115,8 +115,8 @@ export class AuthService {
 
   async checkUser(userDto: UserDto): Promise<string> {
     const {email, password} = userDto;
-    const user: User = await this.userService.findUser({email});
-    const isUserPass: boolean = await bcrypt.compare(password, user.password);
+    const user = await this.userService.findUser({email});
+    const isUserPass = await bcrypt.compare(password, user.password);
 
     if (!user || !isUserPass) {
       return 'invalid email or password';
