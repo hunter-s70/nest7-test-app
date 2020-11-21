@@ -29,6 +29,4 @@ import { User } from './users/user.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {
-  constructor(private connection: Connection) {}
-}
+export class AppModule {}
