@@ -43,7 +43,7 @@ export class AuthController {
         errors,
       }, HttpStatus.FORBIDDEN);
     }
-    const user = await this.authService.signIn(userDto);
+    const user = await this.authService.signIn(userDto.email);
     return {
       token: user.token
     };
