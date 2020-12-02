@@ -6,7 +6,9 @@ import {
   Post,
   Put,
   Delete,
-  ParseIntPipe
+  ParseIntPipe,
+  HttpException,
+  HttpStatus
 } from '@nestjs/common';
 import { Article } from './article.entity';
 import { ArticleDto } from './article.dto';
@@ -30,7 +32,14 @@ export class ArticlesController {
 
   @Get(':id')
   async getArticle(@Param('id', ParseIntPipe) id: number): Promise<Article> {
-    return this.articlesService.findById(id);
+    const article = await this.articlesService.findById(id);
+    if (!article) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        errors: 'can\'t find article',
+      }, HttpStatus.NOT_FOUND);
+    }
+    return article;
   }
 
   @Put(':id')
@@ -39,12 +48,24 @@ export class ArticlesController {
     @Body() articleDto: ArticleDto
   ): Promise<Article> {
     const article = await this.articlesService.findById(id);
+    if (!article) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        errors: 'can\'t find article',
+      }, HttpStatus.NOT_FOUND);
+    }
     return this.articlesService.updateArticle(article, articleDto);
   }
 
   @Delete(':id')
   async deleteArticle(@Param('id', ParseIntPipe) id: number): Promise<Article> {
     const article = await this.articlesService.findById(id);
+    if (!article) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        errors: 'can\'t find article',
+      }, HttpStatus.NOT_FOUND);
+    }
     return this.articlesService.deleteArticle(article);
   }
 }
