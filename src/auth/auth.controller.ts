@@ -7,10 +7,18 @@ import {
   HttpStatus,
   Headers
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiHeader
+} from '@nestjs/swagger';
 import { UserDto } from '../users/user.dto';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 
+@ApiBearerAuth()
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -18,6 +26,9 @@ export class AuthController {
   ) {}
 
   @Post('sign-up')
+  @ApiResponse({ status: 201, description: 'User created.'})
+  @ApiResponse({ status: 400, description: 'Bad Request.'})
+  @ApiResponse({ status: 403, description: 'Forbidden.'})
   async signUp(@Body() userDto: UserDto): Promise<{token: string}> {
     const errors = await this.authService.checkUserExistence(userDto.email);
 
@@ -34,6 +45,9 @@ export class AuthController {
   }
 
   @Post('sign-in')
+  @ApiResponse({ status: 201, description: 'User logged in.'})
+  @ApiResponse({ status: 400, description: 'Bad Request.'})
+  @ApiResponse({ status: 403, description: 'Forbidden.'})
   async signIn(@Body() userDto: UserDto): Promise<{token: string}> {
     const {email, password} = userDto;
     const errors = await this.authService.checkUserIdentity(email, password);
@@ -52,6 +66,12 @@ export class AuthController {
 
   @Post('sign-out')
   @UseGuards(AuthGuard)
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer token',
+  })
+  @ApiResponse({ status: 201, description: 'User logged out.'})
+  @ApiResponse({ status: 403, description: 'Forbidden.'})
   async signOut(@Headers('authorization') authorization): Promise<any> {
     const [, token] = authorization.split(' ');
     const errors = await this.authService.checkUserToken(token);
