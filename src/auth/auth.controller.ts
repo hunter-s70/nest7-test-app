@@ -5,7 +5,8 @@ import {
   Body,
   HttpException,
   HttpStatus,
-  Headers
+  Headers,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,7 +30,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User created.'})
   @ApiResponse({ status: 400, description: 'Bad Request.'})
   @ApiResponse({ status: 403, description: 'Forbidden.'})
-  async signUp(@Body() userDto: UserDto): Promise<{token: string}> {
+  async signUp(@Body(new ValidationPipe({groups: ['sign-up']})) userDto: UserDto): Promise<{token: string}> {
     const errors = await this.authService.checkUserExistence(userDto.email);
 
     if (errors) {

@@ -2,9 +2,10 @@ import { IsEmail, IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-vali
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UserDto {
-  @IsOptional()
   @IsString()
   @MaxLength(16)
+  @IsOptional({groups: ['sign-up']})
+  @IsNotEmpty({groups: ['sign-up']})
   @ApiPropertyOptional({default: 'username'})
   username?: string;
 
