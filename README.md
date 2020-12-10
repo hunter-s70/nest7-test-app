@@ -28,11 +28,34 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Requirements
+- Node.js 10+
+- npm 6+
+- PostgreSQL 9.5.24
+
+## Local development
+
+For local development 
+- setup and run postgres server
+- create .env (as described in .env.example file) and provide correct credentials
+
 ## Installation
 
 ```bash
 $ npm install
 ```
+
+## Running migrations
+
+more commands: https://typeorm.io/#/using-cli
+```bash
+# add migrations
+$ typeorm migration:run
+
+# revert last applied migration
+$ typeorm migration:revert
+```
+
 
 ## Running the app
 
@@ -59,12 +82,6 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
-## Local development
-
-For local development 
-- setup and run postgres server
-- create .env (as described in .env.example file) and provide correct credentials
 
 ## Support
 
