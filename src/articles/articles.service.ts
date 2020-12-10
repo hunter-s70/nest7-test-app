@@ -27,8 +27,7 @@ export class ArticlesService {
   }
 
   async findById(id: number): Promise<Article> {
-    const article = await this.articleRepository.findOne({id});
-    return article ? article : null;
+    return this.articleRepository.findOne({id});
   }
 
   async deleteArticle(article: Article): Promise<Article> {
