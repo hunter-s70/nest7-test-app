@@ -1,12 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(
-    private authService: AuthService,
-  ) {}
+  constructor(private jwtService: JwtService) {}
 
   canActivate(
     context: ExecutionContext,
@@ -15,8 +13,20 @@ export class AuthGuard implements CanActivate {
     const authorization = request.headers.authorization || '';
     const [, token] = authorization.split(' ');
     if (token) {
-      return this.authService.validateToken(token);
+      return this.validateToken(token);
     }
     return false;
+  }
+
+  validateToken(token: string): boolean {
+    try {
+      this.jwtService.verify(token);
+      return true;
+    } catch (err) {
+      throw new HttpException({
+        status: HttpStatus.FORBIDDEN,
+        errors: [err.message],
+      }, HttpStatus.FORBIDDEN);
+    }
   }
 }
