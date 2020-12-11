@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../users/user.service';
@@ -30,18 +30,6 @@ export class AuthService {
     const user = await this.userService.findUser({id, email});
     user.token = null;
     return this.userService.updateUser(user);
-  }
-
-  validateToken(token: string): boolean {
-    try {
-      this.jwtService.verify(token);
-      return true;
-    } catch (err) {
-      throw new HttpException({
-        status: HttpStatus.FORBIDDEN,
-        errors: [err.message],
-      }, HttpStatus.FORBIDDEN);
-    }
   }
 
   async checkUserToken(token: string): Promise<string> {
