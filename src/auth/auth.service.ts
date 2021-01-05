@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '../users/user.service';
 import { UserDto } from '../users/user.dto';
 import { User } from '../users/user.entity';
+import { UserRolesEnum } from '../users/user.roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -25,16 +26,14 @@ export class AuthService {
   }
 
   async signOut(token: string): Promise<User> {
-    const tokenData: any = this.jwtService.decode(token);
-    const {id, email} = tokenData;
+    const {id, email} = this.getParsedTokenData(token);
     const user = await this.userService.findUser({id, email});
     user.token = null;
     return this.userService.updateUser(user);
   }
 
   async checkUserToken(token: string): Promise<string> {
-    const tokenData: any = this.jwtService.decode(token);
-    const {id, email} = tokenData;
+    const {id, email} = this.getParsedTokenData(token);
     const user = await this.userService.findUser({id, email});
 
     if (!user) {
@@ -59,5 +58,19 @@ export class AuthService {
     if (!user || !isUserPass) {
       return 'invalid email or password';
     }
+  }
+
+  async getAuthor(token: string): Promise<User> {
+    const {id} = this.getParsedTokenData(token);
+    return this.userService.findUser({id});
+  }
+
+  async isUserAuthor(token: string): Promise<boolean> {
+    const user = await this.getAuthor(token);
+    return user.role === UserRolesEnum.AUTHOR;
+  }
+
+  getParsedTokenData(token: string): any {
+    return this.jwtService.decode(token);
   }
 }
